@@ -1,0 +1,138 @@
+// Import the Express framework
+const express = require("express");
+// Import the Mongoose library for MongoDB object modeling
+const mongoose = require("mongoose");
+
+// Create an instance of the Express application
+const app = express();
+// Configure Express to parse JSON requests
+app.use(express.json());
+
+// Connect to the MongoDB database named "bookstore"
+mongoose.connect('mongodb://127.0.0.1:27017/bookstore').catch(error => console.error(error));
+// Log a message to the console when connected to MongoDB
+mongoose.connection.on("connected", () => {
+    console.log("Connected to MongoDB");
+});
+
+// Create a schema for the book collection in MongoDB
+const Schema = mongoose.Schema;
+const bookSchema = new Schema({
+    title: {
+        type: String // Field for book title
+    },
+    author: {
+        type: String // Field for book author
+    },
+    genre: {
+        type: String // Field for book genre
+    },
+    pages: {
+        type: Number // Field for number of pages (changed to Number)
+    }
+});
+
+// Create a Mongoose model named "Book" based on the bookSchema
+const Book = mongoose.model("Book", bookSchema);
+
+// Route to handle creating a new book
+app.post("/bookcreation", async (req, res) => {
+    try {
+        // Generate a random number of pages between 1 and 1000
+        const randomPages = Math.floor(Math.random() * 1000) + 1;
+
+        // Create a new book instance with data from the request body
+        const newBook = new Book({
+            title: req.body.title,
+            author: req.body.author,
+            genre: req.body.genre,
+            pages: randomPages // Assign the generated random number to pages
+        });
+        // Save the new book to the database
+        await newBook.save();
+        // Send a response with the newly created book data
+        res.send({ newBook, message: "New book added successfully" });
+    } catch (error) {
+        // If an error occurs, log it to the console and send a 500 error response
+        console.error(error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+});
+
+// Route to handle retrieving a list of books
+app.get("/booklist", async (req, res) => {
+    try {
+        // Query the Book collection and limit the result based on the "limit" query parameter
+        const bookList = await Book.find().limit(parseInt(req.query.limit));
+        // Count the total number of documents in the Book collection
+        const docNumber = await Book.countDocuments();
+        // Send a response with the document count and book list
+        res.send({ docNumber, bookList });
+    } catch (error) {
+        // If an error occurs, log it to the console and send a 500 error response
+        console.error(error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+});
+
+// Route to handle retrieving a single book by its ID
+app.get("/book/:id", async (req, res) => {
+    try {
+        // Find a book in the Book collection by its ID
+        const book = await Book.findOne({ _id: req.params.id });
+        // If no book is found, send a 404 error response
+        if (!book) {
+            res.status(404).send({ message: "Book not found" });
+        } else {
+            // If a book is found, send a response with the book details
+            res.send(book);
+        }
+    } catch (error) {
+        // If an error occurs, log it to the console and send a 500 error response
+        console.error(error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+});
+
+// Route to handle updating a book by its ID
+app.put("/book/:id", async (req, res) => {
+    try {
+        // Find and update a book in the Book collection by its ID
+        const updatedBook = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        // If no book is found, send a 404 error response
+        if (!updatedBook) {
+            res.status(404).send({ message: "Book not found" });
+        } else {
+            // If a book is updated successfully, send a response with the updated book data
+            res.send({ updatedBook, message: "Book updated successfully" });
+        }
+    } catch (error) {
+        // If an error occurs, log it to the console and send a 500 error response
+        console.error(error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+});
+
+// Route to handle deleting a book by its ID
+app.delete("/book/:id", async (req, res) => {
+    try {
+        // Find and delete a book in the Book collection by its ID
+        const deletedBook = await Book.findByIdAndDelete(req.params.id);
+        // If no book is found, send a 404 error response
+        if (!deletedBook) {
+            res.status(404).send({ message: "Book not found" });
+        } else {
+            // If a book is deleted successfully, send a response confirming the deletion
+            res.send({ message: "Book deleted successfully" });
+        }
+    } catch (error) {
+        // If an error occurs, log it to the console and send a 500 error response
+        console.error(error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+});
+
+// Start the Express server on port 8000
+app.listen(8000, () => {
+    console.log("Server is running on port 8000");
+});
