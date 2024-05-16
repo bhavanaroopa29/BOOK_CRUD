@@ -29,8 +29,7 @@ node index.js --- starts server
    - In the request body, select "raw" and choose "JSON" as the format.
    - Use the following JSON object as an example request body:
 
-     ```json
-     {
+  {
     "title": "{{$randomLastName}} Book",
     "author": "{{$randomFirstName}} {{$randomLastName}}",
     "genre": "{{$randomAlphaNumeric}}",
