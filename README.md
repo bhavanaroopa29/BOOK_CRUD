@@ -28,7 +28,8 @@ node index.js --- starts server
    - Set the request type to POST and enter the URL of your API endpoint for creating a new book (`http://localhost:8000/bookcreation`).
    - In the request body, select "raw" and choose "JSON" as the format.
    - Use the following JSON object as an example request body:
-
+in json format
+``json
   {
     "title": "{{$randomLastName}} Book",
     "author": "{{$randomFirstName}} {{$randomLastName}}",
